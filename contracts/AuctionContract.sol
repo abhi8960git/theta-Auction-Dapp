@@ -95,4 +95,18 @@ contract CarAuction {
     }
 
 
+    function fetchLatestAuctionId() public view returns (uint256){
+        return auctionCounter;
+    }
+
+
+     function fetchAllAuctions() public view returns (Auction[] memory) {
+        return auctions;
+    }
+
+
+
+    
+
+
 }

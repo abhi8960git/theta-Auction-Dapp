@@ -5,10 +5,11 @@ import addressData from "../contractAbi/contractAddress.json";
 import auctionAbi from "../contractAbi/auction.json";
 import erc20Abi from "../contractAbi/erc20.json";
         // @ts-ignore
-const AuctionView = memo(({ carDetails, setCarDetails, minBid, setMinBid, write }) => (
+const AuctionView = memo(({ carDetails, setCarDetails, minBid, setMinBid, write,latestAuctioncounter, tokenBalance  }) => (
   <div className="bg-gray-800 text-white p-6 rounded-lg max-w-md mx-auto">
     <h2 className="text-2xl font-bold text-center mb-6">Create new auction</h2>
-    <h2> Last</h2>
+    <h2 className="text-center py-3"> Last Auction id: {Number(latestAuctioncounter)} </h2>
+    <h2 className="text-center py-3"> MTK Token Balance: {Number(tokenBalance)} </h2>
     <div className="mb-4">
       <label className="block mb-2">Car Details:</label>
       <textarea
@@ -76,9 +77,9 @@ const BidView = memo(({ bidAmount, setBidAmount, approveSuccess, writeApprove, w
 const AuctionApp = () => {
   const [activeView, setActiveView] = useState("auction");
   const [carDetails, setCarDetails] = useState("");
-  const [minBid, setMinBid] = useState(0);
+  const [minBid, setMinBid] = useState(null);
   const { address } = useAccount();
-  const [bidAmount, setBidAmount] = useState(0);
+  const [bidAmount, setBidAmount] = useState(null);
 
   const {
     data: itsData,
@@ -104,6 +105,34 @@ const AuctionApp = () => {
     // @ts-ignore
     functionName: "auctionCounter",
   });
+
+
+  const { data: auctions } = useContractRead({
+    // @ts-ignore
+    address: addressData.auction,
+    // @ts-ignore
+    abi: auctionAbi,
+    // @ts-ignore
+    functionName: "fetchAllAuctions",
+ 
+  });
+
+  console.log("this is auctions", auctions);
+
+  const { data: tokenBalance } = useContractRead({
+    // @ts-ignore
+    address: addressData.nft,
+    // @ts-ignore
+    abi: erc20Abi,
+    // @ts-ignore
+    functionName: "balanceOf",
+    // @ts-ignore
+    args:[address]
+ 
+  });
+
+  console.log("tokenBalance", tokenBalance)
+
 
   const {
     data: bidData,
@@ -155,6 +184,8 @@ const AuctionApp = () => {
           minBid={minBid}
           setMinBid={handleSetMinBid}
           write={write}
+          latestAuctioncounter={latestAuctionCounter}
+          tokenBalance={tokenBalance}
         />
       ) : (
         <BidView

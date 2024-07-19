@@ -4,9 +4,10 @@ import { useContractWrite, useContractRead, useAccount } from "wagmi";
 import addressData from "../contractAbi/contractAddress.json";
 import auctionAbi from "../contractAbi/auction.json";
 import erc20Abi from "../contractAbi/erc20.json";
+import { Table } from 'antd';
         // @ts-ignore
-const AuctionView = memo(({ carDetails, setCarDetails, minBid, setMinBid, write,latestAuctioncounter, tokenBalance  }) => (
-  <div className="bg-gray-800 text-white p-6 rounded-lg max-w-md mx-auto">
+const AuctionView = memo(({ carDetails, setCarDetails, minBid, setMinBid, write,latestAuctioncounter, tokenBalance , auctionId , setAuctionId}) => (
+  <div className=" m-4 bg-gray-800 text-white p-6 rounded-lg max-w-md mx-auto">
     <h2 className="text-2xl font-bold text-center mb-6">Create new auction</h2>
     <h2 className="text-center py-3"> Last Auction id: {Number(latestAuctioncounter)} </h2>
     <h2 className="text-center py-3"> MTK Token Balance: {Number(tokenBalance)} </h2>
@@ -37,14 +38,15 @@ const AuctionView = memo(({ carDetails, setCarDetails, minBid, setMinBid, write,
     </button>
     <hr className="my-6 border-gray-600" />
     <h2 className="text-2xl font-bold text-center mb-6">Finish auction</h2>
-    <button className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+    <input type="text" value={auctionId} placeholder="get winner by auction id " onChange={()=> setAuctionId(auctionId)}></input>
+    <button  className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300">
       Finish auction
     </button>
   </div>
 ));
         // @ts-ignore
 const BidView = memo(({ bidAmount, setBidAmount, approveSuccess, writeApprove, writeBidApprove }) => (
-  <div className="bg-gray-800 text-white p-6 rounded-lg max-w-md mx-auto">
+  <div className=" m-4 bg-gray-800 text-white p-6 rounded-lg max-w-md mx-auto">
     <h2 className="text-2xl font-bold text-center mb-6">New bid</h2>
     <div className="mb-4">
       <label className="block mb-2">Enter Bid Amount:</label>
@@ -74,12 +76,71 @@ const BidView = memo(({ bidAmount, setBidAmount, approveSuccess, writeApprove, w
   </div>
 ));
 
+
+
+
+const AuctionTable = ({ auctions }) => {
+  // Define the columns for the antd Table
+  const columns = [
+    {
+      title: 'Car Details',
+      dataIndex: 'carDetails',
+      key: 'carDetails',
+    },
+    {
+      title: 'Car ID',
+      dataIndex: 'carId',
+      key: 'carId',
+      render: (text) => text.toString(),
+    },
+    {
+      title: 'End Time',
+      dataIndex: 'endTime',
+      key: 'endTime',
+      render: (timestamp) => new Date(parseInt(timestamp) * 1000).toUTCString(),
+    },
+    {
+      title: 'Finalized',
+      dataIndex: 'finalized',
+      key: 'finalized',
+      render: (text) => text.toString(),
+    },
+    {
+      title: 'Highest Bid',
+      dataIndex: 'highestBid',
+      key: 'highestBid',
+      render: (text) => text.toString(),
+    },
+    {
+      title: 'Highest Bidder',
+      dataIndex: 'highestBidder',
+      key: 'highestBidder',
+    },
+    {
+      title: 'Minimum Bid',
+      dataIndex: 'minBid',
+      key: 'minBid',
+      render: (text) => text.toString(),
+    },
+    {
+      title: 'Seller',
+      dataIndex: 'seller',
+      key: 'seller',
+    },
+  ];
+
+  return <Table className="scroll-y " columns={columns} dataSource={auctions} rowKey="carId" />;
+};
+
+
+
 const AuctionApp = () => {
   const [activeView, setActiveView] = useState("auction");
   const [carDetails, setCarDetails] = useState("");
   const [minBid, setMinBid] = useState(null);
   const { address } = useAccount();
   const [bidAmount, setBidAmount] = useState(null);
+  const [auctionId, setAuctionId] = useState("");
 
   const {
     data: itsData,
@@ -96,6 +157,40 @@ const AuctionApp = () => {
     // @ts-ignore
     args: [carDetails, minBid],
   });
+  
+  const {
+    data: confirmBid,
+    isLoading:isBidLoading,
+    isSuccess:isBidConfirmLoading,
+    write:writeConfirmBid,
+  } = useContractWrite({
+    // @ts-ignore
+    address: addressData.auction,
+    // @ts-ignore
+    abi: auctionAbi,
+    // @ts-ignore
+    functionName: "createAuction",
+    // @ts-ignore
+    args: [carDetails, minBid],
+  });
+
+  const {
+    data: getWinner,
+    isLoading:isgetWinnerLoading,
+    isSuccess:isgetWinnerSuccess,
+    write:writegetWinner,
+  } = useContractWrite({
+    // @ts-ignore
+    address: addressData.auction,
+    // @ts-ignore
+    abi: auctionAbi,
+    // @ts-ignore
+    functionName: "createAuction",
+    // @ts-ignore
+    args: [carDetails, minBid],
+  });
+
+
 
   const { data: latestAuctionCounter } = useContractRead({
     // @ts-ignore
@@ -177,6 +272,7 @@ const AuctionApp = () => {
         <button onClick={() => setActiveView("bid")}>New Bid</button>
       </div>
       {activeView === "auction" ? (
+        <>
         <AuctionView
         // @ts-ignore
           carDetails={carDetails}
@@ -186,7 +282,13 @@ const AuctionApp = () => {
           write={write}
           latestAuctioncounter={latestAuctionCounter}
           tokenBalance={tokenBalance}
+          auctions= {auctions}
+          setAuctionId={setAuctionId}
+          auctionId={auctionId}
         />
+              <AuctionTable auctions={auctions} />
+
+        </>
       ) : (
         <BidView
         // @ts-ignore

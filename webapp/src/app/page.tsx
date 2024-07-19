@@ -20,6 +20,8 @@ import {
   useContractWrite,
   usePrepareContractWrite,
   useContractEvent,
+  useSwitchNetwork,
+  sepolia,
 } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -28,13 +30,10 @@ import { stakingTNT20ABI } from "../ABI";
 import AuctionApp from "../AuctionPage";
 import './style.css';
 
-// const TNT20_CONTRACT = '0x644B6533038DA0Ee6c330f51A16940139bbbE50B'
-const TNT20_CONTRACT = "0xD40905FD18c7ACf16C9eBD80Fd751C37a3d3ea63";
-const TNT721_CONTRACT = "0x045eE648e4BBAb1b1bcBe95B60e76C9A8143488f";
-const projectID = "73bfede1812912189a63f8b354eac692";
-const tokenSymbol = "RWD";
 
-const theta = {
+const projectID = "73bfede1812912189a63f8b354eac692";
+
+const thetaTestnet = {
   id: 365,
   name: "Theta Testnet",
   network: "theta",
@@ -50,18 +49,18 @@ const theta = {
   blockExplorers: {
     etherscan: {
       name: "Theta Explorer",
-      url: ": https://testnet-explorer.thetatoken.org/",
+      url: "https://testnet-explorer.thetatoken.org/",
     },
     default: {
       name: "Theta Explorer",
-      url: ": https://testnet-explorer.thetatoken.org/",
+      url: "https://testnet-explorer.thetatoken.org/",
     },
   },
 };
 
 
 
-const { chains, publicClient } = configureChains([theta], [publicProvider()]);
+const { chains, publicClient } = configureChains([thetaTestnet, sepolia], [publicProvider()]);
 
 const connectors = connectorsForWallets([
   {
@@ -82,7 +81,11 @@ const wagmiConfig = createConfig({
 
 
 
+
 function YourApp() {
+
+  
+ 
   return (
     <div>
       <nav className="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
@@ -90,7 +93,7 @@ function YourApp() {
           Decireport
         </a>
         <div style={{ paddingRight: "10px" }}>
-          <ConnectButton />
+          <ConnectButton chainStatus="icon" />
         </div>
       </nav>
       <AuctionApp />
@@ -99,6 +102,7 @@ function YourApp() {
 }
 
 function Home() {
+ 
   return (
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider chains={chains} initialChain={361}>
